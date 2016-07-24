@@ -4,7 +4,7 @@ public class Car {
     private String plate;
     private String brand;
     private String colour;
-    private String size;
+    private String size;//enum
 
     public Car(User user, String vin, String plate, String brand, String colour, String size) {
         this.user = user;

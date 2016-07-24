@@ -1,15 +1,14 @@
 abstract public class ParkingSpace {
     protected int id;
-    protected ParkingLot parkingLot;
     protected boolean isOccupied;
+    protected ParkingLot parkingLot;
     protected ParkingSpaceType type;
-    protected Car car;
 
     public ParkingSpace(int id, ParkingLot parkingLot) {
         this.id = id;
         this.parkingLot = parkingLot;
         this.isOccupied = false;
-        this.car = null;
+        this.type = null;
     }
 
     public int getId() {
@@ -24,13 +23,11 @@ abstract public class ParkingSpace {
         return type;
     }
 
-    public void park(Car car) {
+    public void park() {
         isOccupied = true;
-        this.car = car;
     }
 
     public void unPark() {
         isOccupied = false;
-        this.car = null;
     }
 }

@@ -1,14 +1,17 @@
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class ParkingLot {
     private static final int NUM_REGULAR_SPACE = 20;
     private static final int NUM_HANDICAPPED_SPACE = 5;
     private static final int NUM_COMPACT_SPACE = 10;
-    private static final double REGULAR_PRICE = 5.0;
-    private static final double HADNDICAPPED_PRICE = 5.0;
-    private static final double COMPACT_PRICE = 3.0;
+    private static final int REGULAR_PRICE = 500;//500 cents or $5 per hour
+    private static final int HADNDICAPPED_PRICE = 500;
+    private static final int COMPACT_PRICE = 300;
 
     private List<ParkingSpace> regularSpaces;
     private List<ParkingSpace> handicappedSpaces;
@@ -17,6 +20,7 @@ public class ParkingLot {
     private Company company;
     private String address;
     private boolean isFull;
+    public Map<Long, Transaction> transactions;
 
     public ParkingLot(String address, Company company) {
         this.company = company;
@@ -24,7 +28,8 @@ public class ParkingLot {
         regularSpaces = new ArrayList<ParkingSpace>(NUM_REGULAR_SPACE);
         handicappedSpaces = new ArrayList<ParkingSpace>(NUM_HANDICAPPED_SPACE);
         compactSpaces = new ArrayList<ParkingSpace>(NUM_COMPACT_SPACE);
-        createSpaces();//generate parking spaces for this lot
+        createSpaces();
+        transactions = new HashMap<Long, Transaction>();
     }
 
     private void createSpaces() {
@@ -66,7 +71,8 @@ public class ParkingLot {
         return null;
     }
     
-    public void park(ParkingSpaceType type, Car car) throws NotEnoughParkingSpaceException {
+    //return a token
+    public long park(ParkingSpaceType type, Car car) throws NotEnoughParkingSpaceException {
         if (isFull()) {
             throw new NotEnoughParkingSpaceException();
         }
@@ -74,11 +80,43 @@ public class ParkingLot {
         ParkingSpace parkingSpace = getFirstVacantSpace(type);
         
         if (parkingSpace != null) {
-            parkingSpace.park(car);
-            return;
+            parkingSpace.park();
+            //TODO: update isFull variable
+            Transaction transaction = new Transaction(parkingSpace, car, new Date());
+            long token = car.hashCode() * 43;//TODO: how to generate unique token
+            transactions.put(token, transaction);
+            return token;
         }
         
         throw new NotEnoughParkingSpaceException();
+    }
+    
+    //return a charge
+    public int unPark(long token) {
+        // Get the transaction
+        Transaction transaction = transactions.get(token);
+        transaction.setEndTime(new Date());
+        
+        // Get start and end time
+        Date startTime = transaction.getStartTime();
+        Date endTime = transaction.getEndTime();
+        
+        System.out.println(startTime);
+        
+        // Calculate the charge based on start and end time
+        int charge = calculateCharge(startTime, endTime);
+        transaction.setCharge(charge);//this can be saved to database
+        
+        // Final clean up so that this parking space is available again
+        transactions.remove(token);
+        ParkingSpace parkingSpace = transaction.getParkingSpace();
+        parkingSpace.unPark();
+        return charge;
+    }
+    
+    // Algorithm to calculate charge
+    public int calculateCharge(Date startTime, Date endTime) {
+        return 0;
     }
     
     public Boolean isFull() {
