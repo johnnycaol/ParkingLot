@@ -14,14 +14,12 @@ public class ParkingLot {
     private List<ParkingSpace> handicappedSpaces;
     private List<ParkingSpace> compactSpaces;
 
-    private int id;
-    private int companyId;
+    private Company company;
     private String address;
     private boolean isFull;
 
-    public ParkingLot(int id, int companyId, String address) {
-        this.id = id;
-        this.companyId = companyId;
+    public ParkingLot(String address, Company company) {
+        this.company = company;
         this.address = address;
         regularSpaces = new ArrayList<ParkingSpace>(NUM_REGULAR_SPACE);
         handicappedSpaces = new ArrayList<ParkingSpace>(NUM_HANDICAPPED_SPACE);
@@ -32,17 +30,17 @@ public class ParkingLot {
     private void createSpaces() {
         for (int i = 1; i <= NUM_REGULAR_SPACE; i++) {
             // Assume parking space are ordered by distance to the entrance
-            regularSpaces.add(new RegularParkingSpace(i, id, i));
+            regularSpaces.add(new RegularParkingSpace(i, this));
         }
         for (int i = 1; i <= NUM_HANDICAPPED_SPACE; i++) {
-            handicappedSpaces.add(new HandicappedParkingSpace(i, id, i));
+            handicappedSpaces.add(new HandicappedParkingSpace(i, this));
         }
         for (int i = 1; i <= NUM_COMPACT_SPACE; i++) {
-            compactSpaces.add(new CompactParkingSpace(i, id, i));
+            compactSpaces.add(new CompactParkingSpace(i, this));
         }
     }
     
-    private ParkingSpace getNearestVacantSpace(ParkingSpaceType type) {
+    private ParkingSpace getFirstVacantSpace(ParkingSpaceType type) {
         Iterator<ParkingSpace> itrator;
         switch(type) {
             case REGULAR:
@@ -73,7 +71,7 @@ public class ParkingLot {
             throw new NotEnoughParkingSpaceException();
         }
         
-        ParkingSpace parkingSpace = getNearestVacantSpace(type);
+        ParkingSpace parkingSpace = getFirstVacantSpace(type);
         
         if (parkingSpace != null) {
             parkingSpace.park(car);
@@ -85,5 +83,13 @@ public class ParkingLot {
     
     public Boolean isFull() {
         return isFull;
+    }
+    
+    public Company getCompany() {
+        return company;
+    }
+    
+    public String getAddress() {
+        return address;
     }
 }

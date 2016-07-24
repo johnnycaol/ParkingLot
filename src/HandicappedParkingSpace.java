@@ -1,8 +1,8 @@
 
 public class HandicappedParkingSpace extends ParkingSpace {
 
-    public HandicappedParkingSpace(int id, int lotId, double distanceToEntrance) {
-        super(id, lotId, distanceToEntrance);
+    public HandicappedParkingSpace(int id, ParkingLot parkingLot) {
+        super(id, parkingLot);
         type = ParkingSpaceType.HANDICAPPED;
     }
 

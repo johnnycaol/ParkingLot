@@ -9,12 +9,12 @@ Transaction(spot_id, car_id, start, end, total_charge)
 public class User {
     private String firstName;
     private String lastName;
-    private Integer age;
+    private int age;
     private String sex;
     private String address;
     private String phone;
 
-    public User(String firstName, String lastName, Integer age, String sex, String address, String phone) {
+    public User(String firstName, String lastName, int age, String sex, String address, String phone) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.age = age;
@@ -35,7 +35,7 @@ public class User {
         return this.firstName + ' ' + this.lastName;
     }
 
-    public Integer getAge() {
+    public int getAge() {
         return this.age;
     }
 

@@ -1,15 +1,13 @@
 abstract public class ParkingSpace {
     protected int id;
-    protected int lotId;
-    protected double distanceToEntrance;
+    protected ParkingLot parkingLot;
     protected boolean isOccupied;
     protected ParkingSpaceType type;
     protected Car car;
 
-    public ParkingSpace(int id, int lotId, double distanceToEntrance) {
+    public ParkingSpace(int id, ParkingLot parkingLot) {
         this.id = id;
-        this.lotId = lotId;
-        this.distanceToEntrance = distanceToEntrance;
+        this.parkingLot = parkingLot;
         this.isOccupied = false;
         this.car = null;
     }
@@ -18,10 +16,6 @@ abstract public class ParkingSpace {
         return id;
     }
 
-    public double getDistanceToEntrance() {
-        return distanceToEntrance;
-    }
-    
     public boolean isOccupied() {
         return isOccupied;
     }
