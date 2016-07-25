@@ -2,16 +2,16 @@ public class Car {
     private User user;
     private String vin;
     private String plate;
-    private String brand;
+    private String make;
+    private String model;
     private String colour;
-    private String size;//enum
 
-    public Car(User user, String vin, String plate, String brand, String colour, String size) {
+    public Car(User user, String vin, String plate, String make, String model, String colour) {
         this.user = user;
         this.plate = plate;
-        this.brand = brand;
+        this.make = make;
+        this.model = model;
         this.colour = colour;
-        this.size = size;
     }
     
     public User getUser() {
@@ -26,15 +26,15 @@ public class Car {
         return plate;
     }
     
-    public String getBrand() {
-        return brand;
+    public String getMake() {
+        return make;
+    }
+    
+    public String getModel() {
+        return model;
     }
     
     public String getColour() {
         return colour;
-    }
-    
-    public String getSize() {
-        return size;
     }
 }

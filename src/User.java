@@ -1,11 +1,8 @@
-/*
-Transaction(spot_id, car_id, start, end, total_charge)
-*/
 public class User {
     private String firstName;
     private String lastName;
     private int age;
-    private String sex;//use enum here
+    private String sex;
     private String address;
     private String phone;
 

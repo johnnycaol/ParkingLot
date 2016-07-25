@@ -4,13 +4,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class ParkingLot {
-    private static final int NUM_REGULAR_SPACE = 20;
-    private static final int NUM_HANDICAPPED_SPACE = 5;
-    private static final int NUM_COMPACT_SPACE = 10;
-    private static final int REGULAR_PRICE = 500;//500 cents or $5 per hour
-    private static final int HADNDICAPPED_PRICE = 500;
+    private static final int REGULAR_SPACE_CAPACITY = 20;
+    private static final int HANDICAPPED_SPACE_CAPACITY = 5;
+    private static final int COMPACT_SPACE_CAPACITY = 10;
+    private static final int REGULAR_PRICE = 500;// 500 cents or $5 per hour, use int here instead of double
+    private static final int HANDICAPPED_PRICE = 500;
     private static final int COMPACT_PRICE = 300;
 
     private List<ParkingSpace> regularSpaces;
@@ -19,115 +20,163 @@ public class ParkingLot {
 
     private Company company;
     private String address;
-    private boolean isFull;
     public Map<Long, Transaction> transactions;
 
     public ParkingLot(String address, Company company) {
         this.company = company;
         this.address = address;
-        regularSpaces = new ArrayList<ParkingSpace>(NUM_REGULAR_SPACE);
-        handicappedSpaces = new ArrayList<ParkingSpace>(NUM_HANDICAPPED_SPACE);
-        compactSpaces = new ArrayList<ParkingSpace>(NUM_COMPACT_SPACE);
+        regularSpaces = new ArrayList<ParkingSpace>(REGULAR_SPACE_CAPACITY);
+        handicappedSpaces = new ArrayList<ParkingSpace>(HANDICAPPED_SPACE_CAPACITY);
+        compactSpaces = new ArrayList<ParkingSpace>(COMPACT_SPACE_CAPACITY);
         createSpaces();
         transactions = new HashMap<Long, Transaction>();
     }
 
     private void createSpaces() {
-        for (int i = 1; i <= NUM_REGULAR_SPACE; i++) {
+        for (int i = 1; i <= REGULAR_SPACE_CAPACITY; i++) {
             // Assume parking space are ordered by distance to the entrance
             regularSpaces.add(new RegularParkingSpace(i, this));
         }
-        for (int i = 1; i <= NUM_HANDICAPPED_SPACE; i++) {
+        for (int i = 1; i <= HANDICAPPED_SPACE_CAPACITY; i++) {
             handicappedSpaces.add(new HandicappedParkingSpace(i, this));
         }
-        for (int i = 1; i <= NUM_COMPACT_SPACE; i++) {
+        for (int i = 1; i <= COMPACT_SPACE_CAPACITY; i++) {
             compactSpaces.add(new CompactParkingSpace(i, this));
         }
     }
-    
-    private ParkingSpace getFirstVacantSpace(ParkingSpaceType type) {
-        Iterator<ParkingSpace> itrator;
-        switch(type) {
+
+    private ParkingSpace getFirstVacantSpace(ParkingSpaceType parkingSpaceType) {
+        Iterator<ParkingSpace> iterator;
+        switch (parkingSpaceType) {
             case REGULAR:
-                itrator = regularSpaces.iterator();
+                iterator = regularSpaces.iterator();
                 break;
             case HANDICAPPED:
-                itrator = handicappedSpaces.iterator();
+                iterator = handicappedSpaces.iterator();
                 break;
             case COMPACT:
-                itrator = compactSpaces.iterator();
+                iterator = compactSpaces.iterator();
                 break;
             default:
                 throw new IllegalArgumentException();
         }
-            
-        while(itrator.hasNext()) {
-            ParkingSpace parkingSpace = itrator.next();
+
+        while (iterator.hasNext()) {
+            ParkingSpace parkingSpace = iterator.next();
             if (!parkingSpace.isOccupied()) {
                 return parkingSpace;
             }
         }
-        
+
         return null;
     }
     
-    //return a token
+    private Boolean isFull() {
+        int regularOccupiedCount = 0;
+        int handicappedOccupiedCount = 0;
+        int compactOccupiedCount = 0;
+
+        for (ParkingSpace parkingSpace : regularSpaces) {
+            if (parkingSpace.isOccupied()) {
+                regularOccupiedCount += 1;
+            }
+        }
+
+        for (ParkingSpace parkingSpace : handicappedSpaces) {
+            if (parkingSpace.isOccupied()) {
+                handicappedOccupiedCount += 1;
+            }
+        }
+
+        for (ParkingSpace parkingSpace : compactSpaces) {
+            if (parkingSpace.isOccupied()) {
+                compactOccupiedCount += 1;
+            }
+        }
+
+        return regularOccupiedCount + handicappedOccupiedCount + compactOccupiedCount >= 
+                REGULAR_SPACE_CAPACITY + HANDICAPPED_SPACE_CAPACITY + COMPACT_SPACE_CAPACITY;
+    }
+    
+    // Algorithm to calculate charge
+    private int calculateCharge(Date startTime, Date endTime, ParkingSpaceType parkingSpaceType) {
+        int price;
+        switch (parkingSpaceType) {
+            case REGULAR:
+                price = REGULAR_PRICE;
+                break;
+            case HANDICAPPED:
+                price = HANDICAPPED_PRICE;
+                break;
+            case COMPACT:
+                price = COMPACT_PRICE;
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }
+        
+        long diffSeconds = getDateDiff(startTime, endTime, TimeUnit.SECONDS);
+        int hours = (int) diffSeconds/3600;
+        int mod = (int) diffSeconds%3600;
+        if (mod > 0) {
+            hours += 1;
+        }
+        
+        return price*hours;
+    }
+
+    // return a token
     public long park(ParkingSpaceType type, Car car) throws NotEnoughParkingSpaceException {
         if (isFull()) {
             throw new NotEnoughParkingSpaceException();
         }
-        
+
         ParkingSpace parkingSpace = getFirstVacantSpace(type);
-        
+
         if (parkingSpace != null) {
             parkingSpace.park();
-            //TODO: update isFull variable
             Transaction transaction = new Transaction(parkingSpace, car, new Date());
-            long token = car.hashCode() * 43;//TODO: how to generate unique token
+            long token = car.hashCode() * 43;// TODO: how to generate unique token
             transactions.put(token, transaction);
             return token;
         }
-        
+
         throw new NotEnoughParkingSpaceException();
     }
-    
-    //return a charge
+
+    // return a charge
     public int unPark(long token) {
         // Get the transaction
         Transaction transaction = transactions.get(token);
         transaction.setEndTime(new Date());
         
+        // Get the parking space
+        ParkingSpace parkingSpace = transaction.getParkingSpace();
+
         // Get start and end time
         Date startTime = transaction.getStartTime();
         Date endTime = transaction.getEndTime();
-        
-        System.out.println(startTime);
-        
+
         // Calculate the charge based on start and end time
-        int charge = calculateCharge(startTime, endTime);
-        transaction.setCharge(charge);//this can be saved to database
-        
+        int charge = calculateCharge(startTime, endTime, parkingSpace.getType());
+        transaction.setCharge(charge);// this can be saved to database
+
         // Final clean up so that this parking space is available again
         transactions.remove(token);
-        ParkingSpace parkingSpace = transaction.getParkingSpace();
         parkingSpace.unPark();
         return charge;
     }
-    
-    // Algorithm to calculate charge
-    public int calculateCharge(Date startTime, Date endTime) {
-        return 0;
-    }
-    
-    public Boolean isFull() {
-        return isFull;
-    }
-    
+
     public Company getCompany() {
         return company;
     }
-    
+
     public String getAddress() {
         return address;
+    }
+    
+    private static long getDateDiff(Date date1, Date date2, TimeUnit timeUnit) {
+        long diffInMillies = date2.getTime() - date1.getTime();
+        return timeUnit.convert(diffInMillies,TimeUnit.MILLISECONDS);
     }
 }
