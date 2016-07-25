@@ -13,7 +13,6 @@ public class Application {
             try {
                 TimeUnit.SECONDS.sleep(2);
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
             int charge = parkingLot.unPark(token);

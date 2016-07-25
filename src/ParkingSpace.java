@@ -1,4 +1,4 @@
-abstract public class ParkingSpace {
+public abstract class ParkingSpace {
     protected int id;
     protected boolean isOccupied;
     protected ParkingLot parkingLot;
